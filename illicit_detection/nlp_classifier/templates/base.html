@@ -1,0 +1,132 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ZiNUS{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --accent: #7209b7;
+            --light: #f8f9fa;
+            --dark: #212529;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Poppins', sans-serif;}
+        body { background: var(--light); color: var(--dark);}
+        header {
+            background: rgba(255,255,255,0.95);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: fixed; width:100%; z-index:1000; padding:1rem 0;
+        }
+        .container { width:90%; max-width:1200px; margin:0 auto; }
+        .navbar { display:flex; justify-content:space-between; align-items:center; }
+        .logo { display:flex; align-items:center; font-weight:700; font-size:1.5rem; color:var(--primary);}
+        .logo i { margin-right:0.5rem; font-size:1.8rem; }
+        .nav-links { display:flex; list-style:none; }
+        .nav-links li { margin-left:2rem; }
+        .nav-links a {
+            text-decoration:none; color:var(--dark); font-weight:500; position:relative; transition:0.3s;
+        }
+        .nav-links a:hover { color: var(--primary); }
+        .nav-links a::after {
+            content:''; position:absolute; width:0; height:2px; bottom:-5px; left:0; background: var(--primary); transition:0.3s;
+        }
+        .nav-links a:hover::after { width:100%; }
+        .btn { padding:0.7rem 1.5rem; border-radius:50px; font-weight:500; cursor:pointer; border:none; outline:none; }
+        .btn-primary { background: var(--primary); color:white; }
+        .btn-primary:hover { opacity:0.9; }
+
+        footer { background: var(--dark); color:white; padding:4rem 0 2rem; }
+        .footer-content { display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:2rem; margin-bottom:3rem; }
+        .footer-column h3 { font-size:1.2rem; margin-bottom:1.5rem; position:relative; padding-bottom:0.5rem; }
+        .footer-column h3::after { content:''; position:absolute; left:0; bottom:0; width:40px; height:2px; background:var(--primary); }
+        .footer-links { list-style:none; }
+        .footer-links li { margin-bottom:0.8rem; }
+        .footer-links a { color:#aaa; text-decoration:none; transition:0.3s; }
+        .footer-links a:hover { color:white; }
+        .social-links { display:flex; gap:1rem; margin-top:1.5rem; }
+        .social-links a { width:40px; height:40px; border-radius:50%; background: rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; color:white; transition:0.3s; }
+        .social-links a:hover { background: var(--primary); transform: translateY(-3px); }
+        .footer-bottom { text-align:center; padding-top:2rem; border-top:1px solid rgba(255,255,255,0.1); color:#aaa; font-size:0.9rem; }
+        @media (max-width:768px){ .nav-links { display:none; } }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>ZiNUS</span>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li><a href="{% url 'text_classification' %}">Text</a></li>
+                    <li><a href="{% url 'image_classification' %}">Image</a></li>
+                    <li><a href="{% url 'video_classification' %}">Video</a></li>
+                    <li><a href="{% url 'audio_classification' %}">Audio</a></li>
+                </ul>
+                <a class="btn btn-primary" href="{% url 'landing_page' %}">Home</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main style="padding-top:100px;">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>ZiNUS</h3>
+                    <p>Advanced AI-powered content moderation for a safer digital environment.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                        <a href="#"><i class="fab fa-medium"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Product</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Features</a></li>
+                        <li><a href="#">Pricing</a></li>
+                        <li><a href="#">API Documentation</a></li>
+                        <li><a href="#">Integrations</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Case Studies</a></li>
+                        <li><a href="#">Support</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Company</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Contact</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 ZiNUS. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

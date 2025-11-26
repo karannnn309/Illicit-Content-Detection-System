@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+/* Root Gradient Background */
+.gradient-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Cards */
+.card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    padding: 2rem;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(102,126,234,0.2);
+}
+
+/* Upload Area */
+.upload-area {
+    border: 2px dashed rgba(203,213,224,0.8);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+    padding: 2rem;
+    transition: all 0.3s ease;
+}
+
+.upload-area:hover {
+    border-color: #667eea;
+    background: rgba(255,255,255,0.1);
+}
+
+/* Button */
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102,126,234,0.3);
+}
+
+/* Section Titles */
+.section-title {
+    color: black;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-title::before {
+    content: '';
+    width: 4px;
+    height: 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 2px;
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 0.25rem;
+    background: rgba(255,255,255,0.1);
+    color: black;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* Result Cards */
+.result-card {
+    background: rgba(255,255,255,0.05);
+    border-left: 4px solid #667eea;
+}
+
+/* Detected Items */
+.detection-item {
+    background: rgba(255,255,255,0.1);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid #667eea;
+    transition: all 0.2s ease;
+}
+
+.detection-item:hover {
+    transform: translateX(4px);
+    background: rgba(255,255,255,0.15);
+}
+
+/* Preformatted output */
+pre {
+    background: rgba(30,41,59,0.9);
+    color: #e2e8f0;
+    padding: 1.5rem;
+    border-radius: 12px;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+/* File Input */
+input[type="file"] {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid rgba(226,232,240,0.8);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    background: rgba(255,255,255,0.05);
+    color: white;
+}
+
+input[type="file"]:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+}
+
+/* Page Header */
+.page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 25px rgba(102,126,234,0.3);
+}
+
+.alert-error {
+    background: rgba(255,0,0,0.1);
+    border-left: 4px solid #dc3545;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    color: white;
+}
+</style>
+
+<div class="container mx-auto p-6 max-w-5xl">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h2 class="text-3xl font-bold mb-2">🖼️ Image Classification</h2>
+        <p class="text-purple-100">Upload an image to analyze and classify its content using AI</p>
+    </div>
+
+    <!-- Error Message -->
+    {% if error_message %}
+        <div class="alert-error">
+            <div class="flex items-start">
+                <p class="font-semibold">{{ error_message }}</p>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Upload Form -->
+<div class="card mb-8">
+    <h3 class="section-title text-xl" >Upload Image</h3>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="upload-area mb-4">
+            <!-- Render the Django form field -->
+            {{ form.image }}
+
+            <!-- Add a small area to show the selected file name -->
+            <p id="file-name" style="margin-top: 8px; color: gray;">No file selected</p>
+        </div>
+
+        <button type="submit" class="btn-primary w-full md:w-auto">
+            Classify Image
+        </button>
+    </form>
+</div>
+
+<!-- Script to show the selected filename -->
+<script>
+    const input = document.getElementById("id_image"); // Django auto-generates id="id_<fieldname>"
+    const fileNameText = document.getElementById("file-name");
+
+    input.addEventListener("change", function() {
+        if (this.files.length > 0) {
+            fileNameText.textContent = this.files[0].name;
+        } else {
+            fileNameText.textContent = "No file selected";
+        }
+    });
+</script>
+
+    <!-- Results Section -->
+    {% if image_result %}
+        <!-- Raw Results -->
+        <div class="card mb-6">
+            <h3 class="section-title text-xl">📊 Analysis Results</h3>
+            <pre>{{ image_result|safe }}</pre>
+        </div>
+
+        <!-- Detected Objects -->
+        {% if image_detections %}
+            <div class="card mb-6">
+                <h3 class="section-title text-xl">🔍 Detected Objects</h3>
+                <div class="space-y-2">
+                    {% for det in image_detections %}
+                        <div class="detection-item">
+                            <span class="font-medium">{{ det }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Categories -->
+        {% if image_categories %}
+            <div class="card mb-6">
+                <h3 class="section-title text-xl">🏷️ Predicted Categories</h3>
+                <div class="flex flex-wrap gap-2 mt-3">
+                    {% for category in image_categories %}
+                        <span class="badge">{{ category }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Conclusion -->
+        {% if image_conclusion %}
+            <div class="card result-card">
+                <h3 class="section-title text-xl">✅ Conclusion</h3>
+                <p class="text-white text-lg leading-relaxed">{{ image_conclusion }}</p>
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
