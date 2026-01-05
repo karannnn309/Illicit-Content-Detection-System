@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Process Payment - ZiNUS{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 40px 0;">
+    <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 2px 20px rgba(0,0,0,0.1);">
+        <h1 style="color: var(--primary); margin-bottom: 10px;">Complete Your Payment</h1>
+        <p style="color: #6c757d; margin-bottom: 30px;">{{ payment.description }}</p>
+
+        <!-- Payment Summary -->
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+            <h3 style="margin: 0 0 15px 0;">Payment Summary</h3>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span>Item:</span>
+                <strong>{{ payment.description }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span>Type:</span>
+                <strong>{{ payment.get_payment_type_display }}</strong>
+            </div>
+            <div style="border-top: 2px solid #ddd; padding-top: 15px; margin-top: 15px;">
+                <div style="display: flex; justify-content: space-between; font-size: 1.5rem; color: var(--primary);">
+                    <strong>Total:</strong>
+                    <strong>${{ payment.amount }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Form -->
+        <form method="post" style="margin-bottom: 20px;">
+            {% csrf_token %}
+            
+            {% if test_mode %}
+            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                <strong>⚠️ Test Mode Active:</strong> This is a demo payment. No actual charge will be made.
+            </div>
+            {% else %}
+            <div style="background: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+                <strong>✓ Production Mode:</strong> Real payment processing is enabled.
+            </div>
+            {% endif %}
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 10px; font-weight: 600;">Payment Method</label>
+                <select name="payment_method" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;">
+                    {% if test_mode %}
+                    <option value="test">Test Payment (Demo)</option>
+                    <option value="stripe" disabled>Credit Card (Stripe) - Disabled in Test Mode</option>
+                    {% else %}
+                    <option value="stripe">Credit Card (Stripe)</option>
+                    <option value="test">Test Payment (Demo)</option>
+                    {% endif %}
+                </select>
+            </div>
+
+            <button type="submit" style="width: 100%; background: var(--primary); color: white; padding: 15px; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 600; cursor: pointer;">
+                <i class="fas fa-lock"></i> Complete Payment - ${{ payment.amount }}
+            </button>
+        </form>
+
+        <div style="text-align: center;">
+            <a href="{% url 'my_api_keys' %}" style="color: #6c757d; text-decoration: none;">Cancel</a>
+        </div>
+
+        <!-- Security Notice -->
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #6c757d; font-size: 0.9rem;">
+            <i class="fas fa-shield-alt"></i> Your payment is secure and encrypted
+        </div>
+    </div>
+</div>
+{% endblock %}

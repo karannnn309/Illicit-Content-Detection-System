@@ -255,34 +255,34 @@ def analyze_video(video_path, frame_skip=50):
 # AUDIO CLASSIFICATION (UNCHANGED)
 # ========================================
 
-import whisper
+# import whisper
 
-whisper_model = whisper.load_model("base")
+# whisper_model = whisper.load_model("base")
 
-def classify_speech(audio_file_path):
-    results = {}
-    categories = []
-    conclusion = ""
+# def classify_speech(audio_file_path):
+#     results = {}
+#     categories = []
+#     conclusion = ""
 
-    try:
-        transcription = whisper_model.transcribe(audio_file_path)
-        transcript = transcription["text"].strip()
+#     try:
+#         transcription = whisper_model.transcribe(audio_file_path)
+#         transcript = transcription["text"].strip()
 
-        if not transcript:
-            conclusion = "❌ No speech detected in audio."
-            return results, categories, conclusion
+#         if not transcript:
+#             conclusion = "❌ No speech detected in audio."
+#             return results, categories, conclusion
 
-        scores, root_words, text_categories, detected_lang, text_conclusion = classify_text(transcript)
-        results = scores
-        categories = text_categories
-        print(categories)
+#         scores, root_words, text_categories, detected_lang, text_conclusion = classify_text(transcript)
+#         results = scores
+#         categories = text_categories
+#         print(categories)
 
-        if categories:
-            conclusion = f"🎤 Audio likely contains content related to: {', '.join(categories)}"
-        else:
-            conclusion = "✅ No illicit content detected in the audio."
+#         if categories:
+#             conclusion = f"🎤 Audio likely contains content related to: {', '.join(categories)}"
+#         else:
+#             conclusion = "✅ No illicit content detected in the audio."
 
-    except Exception as e:
-        conclusion = f"❌ Failed to analyze audio. Error: {str(e)}"
+#     except Exception as e:
+#         conclusion = f"❌ Failed to analyze audio. Error: {str(e)}"
 
-    return results, categories, conclusion
+#     return results, categories, conclusion

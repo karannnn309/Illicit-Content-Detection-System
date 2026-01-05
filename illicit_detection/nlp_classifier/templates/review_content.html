@@ -1,0 +1,391 @@
+{% extends 'base.html' %}
+
+{% block title %}Review Content #{{ submission.id }}{% endblock %}
+
+{% block content %}
+<style>
+    .review-container {
+        max-width: 1200px;
+        margin: 50px auto;
+        padding: 0 30px;
+    }
+
+    .review-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .review-header h1 {
+        font-size: 36px;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .review-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+    }
+
+    @media (max-width: 900px) {
+        .review-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .content-panel, .review-panel {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .panel-title {
+        font-size: 22px;
+        color: #333;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #eee;
+    }
+
+    .info-group {
+        margin-bottom: 20px;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #666;
+        margin-bottom: 8px;
+        font-size: 14px;
+        text-transform: uppercase;
+    }
+
+    .info-value {
+        color: #333;
+        font-size: 16px;
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .content-text {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        line-height: 1.8;
+        max-height: 400px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .categories-display {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .category-badge {
+        padding: 8px 16px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .classification-results {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 10px;
+    }
+
+    .classification-results pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: #333;
+        font-size: 15px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 15px;
+        font-family: inherit;
+        transition: all 0.3s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+    }
+
+    .btn-submit {
+        flex: 1;
+        padding: 15px;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-approve {
+        background: #2ecc71;
+        color: white;
+    }
+
+    .btn-approve:hover {
+        background: #27ae60;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+    }
+
+    .btn-reject {
+        background: #e74c3c;
+        color: white;
+    }
+
+    .btn-reject:hover {
+        background: #c0392b;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+    }
+
+    .btn-back {
+        display: inline-block;
+        margin-bottom: 20px;
+        padding: 10px 20px;
+        background: #95a5a6;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: background 0.3s;
+    }
+
+    .btn-back:hover {
+        background: #7f8c8d;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        margin-top: 10px;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .metadata-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    @media (max-width: 600px) {
+        .metadata-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .metadata-item {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+    }
+
+    .metadata-label {
+        font-size: 12px;
+        color: #666;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .metadata-value {
+        font-size: 14px;
+        color: #333;
+    }
+</style>
+
+<div class="review-container">
+    <a href="{% url 'admin_dashboard' %}" class="btn-back">← Back to Dashboard</a>
+
+    <div class="review-header">
+        <h1>🔍 Review Content #{{ submission.id }}</h1>
+        <p>Submitted by <strong>{{ submission.user.username|default:"Anonymous" }}</strong></p>
+    </div>
+
+    <div class="review-grid">
+        <!-- Content Panel -->
+        <div class="content-panel">
+            <h2 class="panel-title">📄 Content Details</h2>
+
+            <div class="info-group">
+                <div class="info-label">Content Type</div>
+                <div class="info-value">
+                    {% if submission.content_type == 'text' %}📝 Text Content
+                    {% elif submission.content_type == 'image' %}🖼️ Image Content
+                    {% elif submission.content_type == 'video' %}🎥 Video Content
+                    {% elif submission.content_type == 'audio' %}🎤 Audio Content
+                    {% else %}{{ submission.content_type }}{% endif %}
+                </div>
+            </div>
+
+            {% if submission.text_content %}
+                <div class="info-group">
+                    <div class="info-label">Text Content</div>
+                    <div class="content-text">{{ submission.text_content }}</div>
+                </div>
+            {% endif %}
+
+            {% if submission.content_url %}
+                <div class="info-group">
+                    <div class="info-label">Content URL</div>
+                    <div class="info-value">
+                        <a href="{{ submission.content_url }}" target="_blank" style="color: #667eea; text-decoration: none;">
+                            {{ submission.content_url }}
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if submission.file_path %}
+                <div class="info-group">
+                    <div class="info-label">File Path</div>
+                    <div class="info-value">{{ submission.file_path }}</div>
+                </div>
+            {% endif %}
+
+            <div class="info-group">
+                <div class="info-label">Detected Categories ({{ submission.detected_categories|length }})</div>
+                {% if submission.detected_categories %}
+                    <div class="categories-display">
+                        {% for category in submission.detected_categories %}
+                            <span class="category-badge">{{ category }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="info-value">No illicit categories detected</div>
+                {% endif %}
+            </div>
+
+            <div class="info-group">
+                <div class="info-label">Classification Results</div>
+                <div class="classification-results">
+                    <pre>{{ submission.classification_result|safe }}</pre>
+                </div>
+            </div>
+
+            <div class="metadata-grid">
+                <div class="metadata-item">
+                    <div class="metadata-label">Status</div>
+                    <div class="metadata-value">
+                        <span class="status-badge status-pending">{{ submission.get_status_display }}</span>
+                    </div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">Flagged</div>
+                    <div class="metadata-value">
+                        {% if submission.flagged %}
+                            <span style="color: #e74c3c; font-weight: 600;">⚠️ Yes</span>
+                        {% else %}
+                            <span style="color: #2ecc71; font-weight: 600;">✅ No</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">Submitted</div>
+                    <div class="metadata-value">{{ submission.created_at|date:"M d, Y H:i" }}</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">Source</div>
+                    <div class="metadata-value">
+                        {% if submission.is_from_api %}🔌 API{% else %}🌐 Web Interface{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Panel -->
+        <div class="review-panel">
+            <h2 class="panel-title">✍️ Admin Review</h2>
+
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="id_decision">Decision *</label>
+                    {{ form.decision }}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_comments">Comments / Reasoning</label>
+                    {{ form.comments }}
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" name="decision" value="approved" class="btn-submit btn-approve">
+                        ✅ Approve Content
+                    </button>
+                    <button type="submit" name="decision" value="rejected" class="btn-submit btn-reject">
+                        ❌ Reject Content
+                    </button>
+                </div>
+            </form>
+
+            <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                <h3 style="font-size: 16px; color: #666; margin-bottom: 15px;">ℹ️ Review Guidelines</h3>
+                <ul style="color: #666; font-size: 14px; line-height: 1.8; margin-left: 20px;">
+                    <li>Review the classification results carefully</li>
+                    <li>Consider the context of the content</li>
+                    <li>Provide clear reasoning in comments</li>
+                    <li>User will be notified of your decision</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

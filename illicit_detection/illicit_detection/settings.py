@@ -38,12 +38,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'corsheaders',
     'nlp_classifier'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -123,3 +127,73 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ========================================
+# REST FRAMEWORK CONFIGURATION
+# ========================================
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '1000/day'
+    }
+}
+
+# ========================================
+# JWT CONFIGURATION
+# ========================================
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+}
+
+# ========================================
+# CORS CONFIGURATION
+# ========================================
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+# ========================================
+# AUTHENTICATION CONFIGURATION
+# ========================================
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/dashboard'
+LOGOUT_REDIRECT_URL = '/'
+
+# ========================================
+# STRIPE PAYMENT CONFIGURATION
+# ========================================
+# Set STRIPE_TEST_MODE to True to use test mode (no real charges)
+# Set to False to use production Stripe API keys
+STRIPE_TEST_MODE = True  # Change to False for production
+
+# Stripe Test Keys (get from: https://dashboard.stripe.com/test/apikeys)
+STRIPE_TEST_PUBLIC_KEY = 'pk_test_your_test_publishable_key_here'
+STRIPE_TEST_SECRET_KEY = 'sk_test_your_test_secret_key_here'
+
+# Stripe Live Keys (get from: https://dashboard.stripe.com/apikeys)
+STRIPE_LIVE_PUBLIC_KEY = 'pk_live_your_live_publishable_key_here'
+STRIPE_LIVE_SECRET_KEY = 'sk_live_your_live_secret_key_here'
+
+# Auto-select keys based on mode
+STRIPE_PUBLIC_KEY = STRIPE_TEST_PUBLIC_KEY if STRIPE_TEST_MODE else STRIPE_LIVE_PUBLIC_KEY
+STRIPE_SECRET_KEY = STRIPE_TEST_SECRET_KEY if STRIPE_TEST_MODE else STRIPE_LIVE_SECRET_KEY

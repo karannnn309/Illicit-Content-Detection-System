@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - Content Moderation{% endblock %}
+
+{% block content %}
+<style>
+    .admin-dashboard {
+        max-width: 1400px;
+        margin: 50px auto;
+        padding: 0 30px;
+    }
+
+    .admin-header {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+
+    .admin-header h1 {
+        font-size: 42px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 15px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 25px;
+        margin-bottom: 50px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        text-align: center;
+        transition: transform 0.3s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+
+    .stat-number {
+        font-size: 48px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .stat-card:nth-child(1) .stat-number { color: #f39c12; }
+    .stat-card:nth-child(2) .stat-number { color: #3498db; }
+    .stat-card:nth-child(3) .stat-number { color: #2ecc71; }
+    .stat-card:nth-child(4) .stat-number { color: #e74c3c; }
+
+    .stat-label {
+        font-size: 16px;
+        color: #666;
+        font-weight: 500;
+    }
+
+    .submissions-section {
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .section-header h2 {
+        font-size: 28px;
+        color: #333;
+    }
+
+    .btn-view-all {
+        padding: 12px 25px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: transform 0.3s;
+    }
+
+    .btn-view-all:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .submissions-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .submissions-table thead {
+        background: #f8f9fa;
+    }
+
+    .submissions-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        color: #666;
+        font-size: 14px;
+        text-transform: uppercase;
+    }
+
+    .submissions-table td {
+        padding: 18px 15px;
+        border-bottom: 1px solid #eee;
+        vertical-align: middle;
+    }
+
+    .submissions-table tr:hover {
+        background: #f8f9fa;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-approved {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .btn-review {
+        padding: 8px 20px;
+        background: #667eea;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        transition: background 0.3s;
+    }
+
+    .btn-review:hover {
+        background: #764ba2;
+    }
+
+    .no-submissions {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+    }
+
+    .no-submissions i {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.3;
+    }
+
+    .categories-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .category-tag {
+        padding: 4px 10px;
+        background: #667eea;
+        color: white;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .content-preview {
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 14px;
+        color: #666;
+    }
+</style>
+
+<div class="admin-dashboard">
+    <div class="admin-header">
+        <h1>🛡️ Admin Dashboard</h1>
+        <p>Content Moderation & Review System</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_pending }}</div>
+            <div class="stat-label">Pending Reviews</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ total_reviewed }}</div>
+            <div class="stat-label">Total Reviewed</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ total_approved }}</div>
+            <div class="stat-label">Approved</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ total_rejected }}</div>
+            <div class="stat-label">Rejected</div>
+        </div>
+    </div>
+
+    <div class="submissions-section">
+        <div class="section-header">
+            <h2>⚠️ Pending Review</h2>
+            <a href="{% url 'all_submissions' %}" class="btn-view-all">View All Submissions</a>
+        </div>
+
+        {% if recent_submissions %}
+            <table class="submissions-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Type</th>
+                        <th>Content Preview</th>
+                        <th>Categories</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for submission in recent_submissions %}
+                        <tr>
+                            <td><strong>#{{ submission.id }}</strong></td>
+                            <td>{{ submission.user.username|default:"Anonymous" }}</td>
+                            <td>
+                                {% if submission.content_type == 'text' %}📝 Text
+                                {% elif submission.content_type == 'image' %}🖼️ Image
+                                {% elif submission.content_type == 'video' %}🎥 Video
+                                {% else %}📄 {{ submission.content_type }}{% endif %}
+                            </td>
+                            <td>
+                                <div class="content-preview">
+                                    {% if submission.text_content %}
+                                        {{ submission.text_content|truncatewords:10 }}
+                                    {% elif submission.content_url %}
+                                        {{ submission.content_url }}
+                                    {% else %}
+                                        Uploaded file
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="categories-list">
+                                    {% for category in submission.detected_categories %}
+                                        <span class="category-tag">{{ category }}</span>
+                                    {% empty %}
+                                        <span style="color: #999; font-size: 12px;">None</span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td>{{ submission.created_at|date:"M d, Y H:i" }}</td>
+                            <td>
+                                <a href="{% url 'review_content' submission.id %}" class="btn-review">Review</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="no-submissions">
+                <div>✅</div>
+                <h3>No Pending Reviews</h3>
+                <p>All submissions have been reviewed!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

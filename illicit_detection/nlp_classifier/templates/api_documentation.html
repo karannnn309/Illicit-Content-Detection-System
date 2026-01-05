@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block title %}API Documentation - ZiNUS{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 40px 0;">
+    <div style="background: white; padding: 40px; border-radius: 12px; box-shadow: 0 2px 20px rgba(0,0,0,0.1);">
+        <h1 style="color: var(--primary); margin-bottom: 10px;">API Documentation</h1>
+        <p style="color: #6c757d; margin-bottom: 40px;">Integrate content classification into your applications with our REST API.</p>
+
+        <!-- Authentication Section -->
+        <section style="margin-bottom: 40px;">
+            <h2 style="color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 20px;">
+                <i class="fas fa-key"></i> Authentication
+            </h2>
+            <p>All API requests require an API key. Include your API key in the request header:</p>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid var(--primary); margin: 20px 0;">
+                <code style="color: #d63384;">X-API-Key: {{ sample_key }}</code>
+            </div>
+            <p><strong>Free Tier:</strong> 50 requests per day. Additional requests: $0.01 each.</p>
+            <p>Get your API key from the <a href="{% url 'my_api_keys' %}" style="color: var(--primary);">API Keys</a> page.</p>
+        </section>
+
+        <!-- Base URL Section -->
+        <section style="margin-bottom: 40px;">
+            <h2 style="color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 20px;">
+                <i class="fas fa-server"></i> Base URL
+            </h2>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid var(--primary);">
+                <code>{{ request.scheme }}://{{ request.get_host }}/api/v1/</code>
+            </div>
+        </section>
+
+        <!-- Text Classification Endpoint -->
+        <section style="margin-bottom: 40px; border: 1px solid #ddd; padding: 25px; border-radius: 8px;">
+            <h3 style="color: var(--primary); margin-bottom: 15px;">
+                <span style="background: #28a745; color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; margin-right: 10px;">POST</span>
+                Text Classification
+            </h3>
+            <p style="margin-bottom: 15px;"><code>/classify/text/</code></p>
+            
+            <h4 style="margin: 20px 0 10px 0;">Request Body:</h4>
+            <pre style="background: #282c34; color: #abb2bf; padding: 20px; border-radius: 8px; overflow-x: auto;"><code>{
+  "text": "Your text content to classify",
+  "webhook_url": "https://your-webhook.com/endpoint" // optional
+}</code></pre>
+
+            <h4 style="margin: 20px 0 10px 0;">Example (cURL):</h4>
+            <pre style="background: #282c34; color: #abb2bf; padding: 20px; border-radius: 8px; overflow-x: auto;"><code>curl -X POST {{ request.scheme }}://{{ request.get_host }}/api/v1/classify/text/ \
+  -H "X-API-Key: {{ sample_key }}" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Sample text to analyze"}'</code></pre>
+
+            <h4 style="margin: 20px 0 10px 0;">Response:</h4>
+            <pre style="background: #282c34; color: #abb2bf; padding: 20px; border-radius: 8px; overflow-x: auto;"><code>{
+  "submission_id": 123,
+  "content_type": "text",
+  "status": "auto_approved",
+  "flagged": false,
+  "detected_categories": [],
+  "classification_result": {
+    "scores": {...},
+    "root_words": [...],
+    "detected_language": "en",
+    "conclusion": "Clean"
+  },
+  "message": "Content approved",
+  "created_at": "2024-01-15T10:30:00Z"
+}</code></pre>
+        </section>
+
+        <!-- Image Classification Endpoint -->
+        <section style="margin-bottom: 40px; border: 1px solid #ddd; padding: 25px; border-radius: 8px;">
+            <h3 style="color: var(--primary); margin-bottom: 15px;">
+                <span style="background: #28a745; color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; margin-right: 10px;">POST</span>
+                Image Classification
+            </h3>
+            <p style="margin-bottom: 15px;"><code>/classify/image/</code></p>
+            
+            <h4 style="margin: 20px 0 10px 0;">Request Body (Form Data or JSON):</h4>
+            <pre style="background: #282c34; color: #abb2bf; padding: 20px; border-radius: 8px; overflow-x: auto;"><code>// Option 1: Upload file
+{
+  "image": &lt;file&gt;,
+  "webhook_url": "https://your-webhook.com/endpoint" // optional
+}
+
+// Option 2: Provide URL
+{
+  "image_url": "https://example.com/image.jpg",
+  "webhook_url": "https://your-webhook.com/endpoint" // optional
+}</code></pre>
+
+            <h4 style="margin: 20px 0 10px 0;">Example (cURL with file):</h4>
+            <pre style="background: #282c34; color: #abb2bf; padding: 20px; border-radius: 8px; overflow-x: auto;"><code>curl -X POST {{ request.scheme }}://{{ request.get_host }}/api/v1/classify/image/ \
+  -H "X-API-Key: {{ sample_key }}" \
+  -F "image=@/path/to/image.jpg"</code></pre>
+        </section>
+
+        <!-- Video Classification Endpoint -->
+        <section style="margin-bottom: 40px; border: 1px solid #ddd; padding: 25px; border-radius: 8px;">
+            <h3 style="color: var(--primary); margin-bottom: 15px;">
+                <span style="background: #28a745; color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; margin-right: 10px;">POST</span>
+                Video Classification
+            </h3>
+            <p style="margin-bottom: 15px;"><code>/classify/video/</code></p>
+            
+            <h4 style="margin: 20px 0 10px 0;">Request Body (Form Data or JSON):</h4>
+            <pre style="background: #282c34; color: #abb2bf; padding: 20px; border-radius: 8px; overflow-x: auto;"><code>// Option 1: Upload file
+{
+  "video": &lt;file&gt;,
+  "webhook_url": "https://your-webhook.com/endpoint" // optional
+}
+
+// Option 2: Provide URL
+{
+  "video_url": "https://example.com/video.mp4",
+  "webhook_url": "https://your-webhook.com/endpoint" // optional
+}</code></pre>
+        </section>
+
+        <!-- Get Submission Endpoint -->
+        <section style="margin-bottom: 40px; border: 1px solid #ddd; padding: 25px; border-radius: 8px;">
+            <h3 style="color: var(--primary); margin-bottom: 15px;">
+                <span style="background: #007bff; color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; margin-right: 10px;">GET</span>
+                Get Submission Details
+            </h3>
+            <p style="margin-bottom: 15px;"><code>/submission/&lt;submission_id&gt;/</code></p>
+            
+            <h4 style="margin: 20px 0 10px 0;">Example:</h4>
+            <pre style="background: #282c34; color: #abb2bf; padding: 20px; border-radius: 8px; overflow-x: auto;"><code>curl -X GET {{ request.scheme }}://{{ request.get_host }}/api/v1/submission/123/ \
+  -H "X-API-Key: {{ sample_key }}"</code></pre>
+        </section>
+
+        <!-- Error Responses -->
+        <section style="margin-bottom: 40px;">
+            <h2 style="color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 20px;">
+                <i class="fas fa-exclamation-triangle"></i> Error Responses
+            </h2>
+            
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #dc3545;">401 Unauthorized</h4>
+                <pre style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;"><code>{"error": "API key required in X-API-Key header"}</code></pre>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #dc3545;">429 Too Many Requests</h4>
+                <pre style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;"><code>{"error": "Daily rate limit exceeded"}</code></pre>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #dc3545;">400 Bad Request</h4>
+                <pre style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;"><code>{"error": "Invalid request data"}</code></pre>
+            </div>
+        </section>
+
+        <!-- Rate Limits -->
+        <section style="background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #ffc107;">
+            <h3 style="color: #856404; margin-bottom: 10px;"><i class="fas fa-tachometer-alt"></i> Rate Limits</h3>
+            <ul style="margin: 0; padding-left: 20px; color: #856404;">
+                <li>Free Tier: 50 requests per day</li>
+                <li>Additional requests: $0.01 per request</li>
+                <li>Rate limits reset daily at midnight UTC</li>
+                <li>Current usage visible in your <a href="{% url 'my_api_keys' %}" style="color: #856404; text-decoration: underline;">API Keys</a> dashboard</li>
+            </ul>
+        </section>
+    </div>
+</div>
+{% endblock %}
