@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Razorpay Payment - ZiNUS{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 40px 0;">
+    <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 2px 20px rgba(0,0,0,0.1);">
+        <h1 style="color: var(--primary); margin-bottom: 10px;">Razorpay Payment</h1>
+        <p style="color: #6c757d; margin-bottom: 30px;">Complete your payment using Razorpay</p>
+
+        <!-- Payment Summary -->
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+            <h3 style="margin: 0 0 15px 0;">Payment Summary</h3>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span>Item:</span>
+                <strong>{{ payment.description }}</strong>
+            </div>
+            <div style="border-top: 2px solid #ddd; padding-top: 15px; margin-top: 15px;">
+                <div style="display: flex; justify-content: space-between; font-size: 1.5rem; color: var(--primary);">
+                    <strong>Total:</strong>
+                    <strong>₹{{ amount }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Razorpay Info -->
+        <div style="background: #e7f3ff; border-left: 4px solid #2196f3; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+            <strong>🇮🇳 Razorpay Checkout:</strong> You can pay using UPI, Credit/Debit Cards, NetBanking, or Digital Wallets.
+        </div>
+
+        <!-- Pay Now Button -->
+        <button id="rzp-button" style="width: 100%; background: #2196f3; color: white; padding: 15px; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 600; cursor: pointer;">
+            <i class="fas fa-lock"></i> Pay ₹{{ amount }} with Razorpay
+        </button>
+
+        <div style="text-align: center; margin-top: 15px;">
+            <a href="{% url 'my_api_keys' %}" style="color: #6c757d; text-decoration: none;">Cancel</a>
+        </div>
+
+        <!-- Security Notice -->
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #6c757d; font-size: 0.9rem;">
+            <i class="fas fa-shield-alt"></i> Secured by Razorpay - Your payment information is safe
+        </div>
+    </div>
+</div>
+
+<!-- Razorpay Checkout Script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    var options = {
+        "key": "{{ razorpay_key_id }}",
+        "amount": "{{ amount|floatformat:2 }}".replace('.', '') * 100, // Amount in paise
+        "currency": "INR",
+        "name": "ZiNUS API Services",
+        "description": "{{ payment.description }}",
+        "order_id": "{{ razorpay_order_id }}",
+        "handler": function (response) {
+            // Payment successful - send to callback URL
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{% url "razorpay_payment_callback" %}';
+            
+            // Add CSRF token
+            var csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = '{{ csrf_token }}';
+            form.appendChild(csrfInput);
+            
+            // Add payment details
+            var fields = {
+                'razorpay_payment_id': response.razorpay_payment_id,
+                'razorpay_order_id': response.razorpay_order_id,
+                'razorpay_signature': response.razorpay_signature
+            };
+            
+            for (var key in fields) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = fields[key];
+                form.appendChild(input);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
+        },
+        "prefill": {
+            "name": "{{ user_name }}",
+            "email": "{{ user_email }}"
+        },
+        "theme": {
+            "color": "#2196f3"
+        },
+        "modal": {
+            "ondismiss": function() {
+                alert('Payment cancelled. You can try again.');
+            }
+        }
+    };
+    
+    var rzp = new Razorpay(options);
+    
+    document.getElementById('rzp-button').onclick = function(e) {
+        e.preventDefault();
+        rzp.open();
+    };
+</script>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - ZiNUS{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 40px 0;">
+    <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 20px rgba(0,0,0,0.1);">
+        <h1 style="color: var(--primary); margin-bottom: 10px;">Notifications</h1>
+        <p style="color: #6c757d; margin-bottom: 30px;">
+            {% if unread_count > 0 %}
+                You have <strong>{{ unread_count }}</strong> unread notification{{ unread_count|pluralize }}.
+            {% else %}
+                You're all caught up!
+            {% endif %}
+        </p>
+
+        {% if notifications %}
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                {% for notification in notifications %}
+                <div style="border: 1px solid {% if notification.is_read %}#ddd{% else %}var(--primary){% endif %}; 
+                            border-radius: 8px; padding: 20px; background: {% if notification.is_read %}white{% else %}#e7f3ff{% endif %};">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                {% if notification.notification_type == 'review_complete' %}
+                                    <i class="fas fa-check-circle" style="color: #28a745; font-size: 1.5rem; margin-right: 10px;"></i>
+                                {% elif notification.notification_type == 'api_limit' %}
+                                    <i class="fas fa-exclamation-triangle" style="color: #ffc107; font-size: 1.5rem; margin-right: 10px;"></i>
+                                {% elif notification.notification_type == 'billing' %}
+                                    <i class="fas fa-dollar-sign" style="color: #17a2b8; font-size: 1.5rem; margin-right: 10px;"></i>
+                                {% else %}
+                                    <i class="fas fa-info-circle" style="color: var(--primary); font-size: 1.5rem; margin-right: 10px;"></i>
+                                {% endif %}
+                                <h3 style="margin: 0; font-size: 1.1rem;">{{ notification.title }}</h3>
+                            </div>
+                            <p style="margin: 0 0 10px 0; color: #495057;">{{ notification.message }}</p>
+                            <div style="display: flex; align-items: center; gap: 20px; font-size: 0.85rem; color: #6c757d;">
+                                <span><i class="fas fa-clock"></i> {{ notification.created_at|date:"M d, Y g:i A" }}</span>
+                                <span style="background: var(--primary); color: white; padding: 3px 10px; border-radius: 15px;">
+                                    {{ notification.get_notification_type_display }}
+                                </span>
+                                {% if notification.related_submission %}
+                                    <a href="{% url 'dashboard' %}" style="color: var(--primary); text-decoration: none;">
+                                        <i class="fas fa-external-link-alt"></i> View Submission
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div style="margin-left: 20px;">
+                            {% if not notification.is_read %}
+                            <form method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="notification_id" value="{{ notification.id }}">
+                                <button type="submit" style="background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+                                    <i class="fas fa-check"></i> Mark as Read
+                                </button>
+                            </form>
+                            {% else %}
+                            <span style="color: #28a745; font-size: 0.9rem;">
+                                <i class="fas fa-check-double"></i> Read
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 60px 20px; color: #6c757d;">
+                <i class="fas fa-bell-slash" style="font-size: 5rem; margin-bottom: 20px; opacity: 0.3;"></i>
+                <h2>No Notifications</h2>
+                <p>You don't have any notifications yet. We'll notify you about content reviews and important updates.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,342 @@
+{% extends 'base.html' %}
+
+{% block title %}My API Keys - ZiNUS{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 40px 0;">
+    <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 20px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h1 style="color: var(--primary); margin: 0;">My API Keys</h1>
+            <button onclick="document.getElementById('createKeyForm').style.display='block'" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create New API Key
+            </button>
+        </div>
+
+        <!-- Create API Key Form -->
+        <div id="createKeyForm" style="display: none; background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+            <form method="post">
+                {% csrf_token %}
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">API Key Name</label>
+                    <input type="text" name="name" required placeholder="e.g., Production Server" 
+                           style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary">Create</button>
+                    <button type="button" onclick="document.getElementById('createKeyForm').style.display='none'" 
+                            style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 50px; cursor: pointer;">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Info Box -->
+        <div style="background: #e7f3ff; border-left: 4px solid var(--primary); padding: 15px; margin-bottom: 30px; border-radius: 5px;">
+            <h3 style="margin: 0 0 10px 0; color: var(--primary);"><i class="fas fa-info-circle"></i> Free Tier</h3>
+            <p style="margin: 0;">You get <strong>50 free API requests per day</strong>. After that, each request costs <strong>$0.01</strong>.</p>
+        </div>
+
+        <!-- API Keys List -->
+        {% if api_keys %}
+            {% for key in api_keys %}
+            <!-- Detailed Subscription Card for each API Key -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 10%); padding: 25px; border-radius: 12px; margin-bottom: 30px; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+                    <div>
+                        <h2 style="margin: 0 0 5px 0; font-size: 1.8rem;">{{ key.name }}</h2>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span style="
+                                {% if key.tier == 'free' %}background: rgba(255,255,255,0.2);
+                                {% elif key.tier == 'basic' %}background: rgba(0,123,255,0.3);
+                                {% else %}background: rgba(255,193,7,0.3);
+                                {% endif %}
+                                padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 1.1rem;">
+                                {{ key.get_tier_display|upper }}
+                            </span>
+                            {% if key.subscription_status == 'active' %}
+                                <span style="background: rgba(40,167,69,0.3); padding: 5px 15px; border-radius: 20px; font-size: 0.9rem;">
+                                    <i class="fas fa-check-circle"></i> Active Subscription
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        {% if key.tier != 'free' %}
+                            <div style="font-size: 2rem; font-weight: bold; margin-bottom: 5px;">
+                                ${{ key.get_tier_price }}/mo
+                            </div>
+                        {% else %}
+                            <div style="font-size: 2rem; font-weight: bold; margin-bottom: 5px;">
+                                FREE
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Usage Statistics -->
+                <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 10px; margin-bottom: 20px; backdrop-filter: blur(10px);">
+                    <h3 style="margin: 0 0 15px 0; font-size: 1.2rem;"><i class="fas fa-chart-line"></i> Usage Statistics</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                        <div>
+                            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 5px;">Requests Used Today</div>
+                            <div style="font-size: 2rem; font-weight: bold;">{{ key.requests_today }}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 5px;">Daily Limit</div>
+                            <div style="font-size: 2rem; font-weight: bold;">{{ key.daily_limit }}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 5px;">Remaining Today</div>
+                            <div style="font-size: 2rem; font-weight: bold; {% if key.requests_today >= key.daily_limit %}color: #ff6b6b;{% else %}color: #51cf66;{% endif %}">
+                                {{ key.daily_limit|add:"-"|add:key.requests_today }}
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 5px;">Usage Percentage</div>
+                            <div style="font-size: 2rem; font-weight: bold;">
+                                {% widthratio key.requests_today key.daily_limit 100 %}%
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div style="margin-top: 15px; background: rgba(0,0,0,0.2); height: 10px; border-radius: 5px; overflow: hidden;">
+                        <div style="
+                            {% if key.requests_today >= key.daily_limit %}background: #ff6b6b;
+                            {% elif key.requests_today >= key.daily_limit|floatformat:0|add:'-15' %}background: #ffa502;
+                            {% else %}background: #51cf66;
+                            {% endif %}
+                            height: 100%; width: {% widthratio key.requests_today key.daily_limit 100 %}%; transition: width 0.3s;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subscription Details -->
+                {% if key.subscription_status == 'active' and key.subscription_end %}
+                <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 10px; margin-bottom: 20px; backdrop-filter: blur(10px);">
+                    <h3 style="margin: 0 0 15px 0; font-size: 1.2rem;"><i class="fas fa-calendar-alt"></i> Subscription Details</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                        <div>
+                            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 5px;">Started On</div>
+                            <div style="font-size: 1.3rem; font-weight: 600;">{{ key.subscription_start|date:"M d, Y" }}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 5px;">Expires On</div>
+                            <div style="font-size: 1.3rem; font-weight: 600;">{{ key.subscription_end|date:"M d, Y" }}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 5px;">Days Remaining</div>
+                            <div style="font-size: 1.3rem; font-weight: 600;">
+                                {{ key.subscription_end|timeuntil }}
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 5px;">Monthly Price</div>
+                            <div style="font-size: 1.3rem; font-weight: 600;">${{ my_api_keys.get_tier_price }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- API Key and Actions -->
+                <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 10px; backdrop-filter: blur(10px);">
+                    <div style="margin-bottom: 15px;">
+                        <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 8px;"><i class="fas fa-key"></i> API Key</div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <code style="background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 5px; font-size: 0.95rem; flex: 1; overflow-x: auto; white-space: nowrap;">
+                                {{ key.key }}
+                            </code>
+                            <button onclick="copyToClipboard('{{ key.key }}')" 
+                                    style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 10px 15px; border-radius: 5px; cursor: pointer; white-space: nowrap;">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+                        {% if key.tier == 'free' %}
+                            <a href="{% url 'upgrade_api_key' key.id %}" 
+                               style="background: rgba(11, 216, 59, 2.3); border: 1px solid rgba(40,167,69,0.5); color: white; padding: 12px 25px; border-radius: 5px; text-decoration: none; font-weight: 600;">
+                                <i class="fas fa-arrow-up"></i> Upgrade to Paid Plan
+                            </a>
+                        {% elif key.subscription_status == 'active' %}
+                            <form method="post" action="{% url 'cancel_subscription' key.id %}" 
+                                  onsubmit="return confirm('Are you sure you want to cancel this subscription? You will be downgraded to free tier.');" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" style="background: rgba(228, 59, 7, 2.3); border: 1px solid rgba(255,193,7,0.5); color: white; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: 600;">
+                                    <i class="fas fa-ban"></i> Cancel Subscription
+                                </button>
+                            </form>
+                        {% endif %}
+                        
+                        {% if not key.is_active %}
+                            <span style="background: rgba(220,53,69,2.3); border: 1px solid rgba(220,53,69,0.5); color: white; padding: 12px 25px; border-radius: 5px; font-weight: 600;">
+                                <i class="fas fa-times-circle"></i> Inactive
+                            </span>
+                        {% endif %}
+                        
+                        <form method="post" action="{% url 'delete_api_key' key.id %}" 
+                              onsubmit="return confirm('Are you sure you want to delete this API key? This action cannot be undone.');" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" style="background: rgba(220,53,69,2.3); border: 1px solid rgba(220,53,69,0.5); color: white; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: 600;">
+                                <i class="fas fa-trash"></i> Delete Key
+                            </button>
+                        </form>
+                        
+                        <div style="font-size: 0.85rem; opacity: 0.8; align-self: center; margin-left: auto;">
+                            <i class="fas fa-calendar"></i> Created: {{ key.created_at|date:"M d, Y" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Legacy Table (Hidden by default, can be toggled) -->
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #ddd;">
+                <button onclick="document.getElementById('legacyTable').style.display = document.getElementById('legacyTable').style.display === 'none' ? 'block' : 'none'" 
+                        style="background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-bottom: 20px;">
+                    <i class="fas fa-table"></i> Toggle Compact View
+                </button>
+                
+                <div id="legacyTable" style="display: none;">
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: var(--primary); color: white;">
+                            <th style="padding: 12px; text-align: left;">Name</th>
+                            <th style="padding: 12px; text-align: left;">API Key</th>
+                            <th style="padding: 12px; text-align: center;">Tier</th>
+                            <th style="padding: 12px; text-align: center;">Subscription Status</th>
+                            <th style="padding: 12px; text-align: center;">Requests Today</th>
+                            <th style="padding: 12px; text-align: center;">Daily Limit</th>
+                            <th style="padding: 12px; text-align: center;">Status</th>
+                            <th style="padding: 12px; text-align: center;">Created</th>
+                            <th style="padding: 12px; text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for key in api_keys %}
+                        <tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 12px;">
+                                <strong>{{ key.name }}</strong>
+                            </td>
+                            <td style="padding: 12px;">
+                                <code style="background: #f8f9fa; padding: 5px 10px; border-radius: 4px; font-size: 0.9rem; display: inline-block; max-width: 300px; overflow: hidden; text-overflow: ellipsis;">
+                                    {{ key.key }}
+                                </code>
+                                <button onclick="copyToClipboard('{{ key.key }}')" 
+                                        style="background: none; border: none; color: var(--primary); cursor: pointer; margin-left: 10px;">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </td>
+                            <td style="padding: 12px; text-align: center;">
+                                <span style="
+                                    {% if key.tier == 'free' %}background: #6c757d;
+                                    {% elif key.tier == 'basic' %}background: #007bff;
+                                    {% else %}background: #ffc107; color: #000;
+                                    {% endif %}
+                                    color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: 600;">
+                                    {{ key.get_tier_display }}
+                                </span>
+                            </td>
+                            <td style="padding: 12px; text-align: center;">
+                                {% if key.tier == 'free' %}
+                                    <span style="background: #e9ecef; color: #6c757d; padding: 8px 15px; border-radius: 20px; font-size: 0.85rem;">
+                                        <i class="fas fa-gift"></i> Free Plan
+                                    </span>
+                                {% elif key.subscription_status == 'active' %}
+                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                                        <span style="background: #d4edda; color: #155724; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">
+                                            <i class="fas fa-check-circle"></i> Active
+                                        </span>
+                                        {% if key.subscription_end %}
+                                            <small style="color: #6c757d; font-size: 0.75rem;">
+                                                Expires: {{ key.subscription_end|date:"M d, Y" }}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                {% elif key.subscription_status == 'cancelled' %}
+                                    <span style="background: #fff3cd; color: #856404; padding: 8px 15px; border-radius: 20px; font-size: 0.85rem;">
+                                        <i class="fas fa-ban"></i> Cancelled
+                                    </span>
+                                {% elif key.subscription_status == 'expired' %}
+                                    <span style="background: #f8d7da; color: #721c24; padding: 8px 15px; border-radius: 20px; font-size: 0.85rem;">
+                                        <i class="fas fa-clock"></i> Expired
+                                    </span>
+                                {% else %}
+                                    <span style="background: #e9ecef; color: #6c757d; padding: 8px 15px; border-radius: 20px; font-size: 0.85rem;">
+                                        <i class="fas fa-minus-circle"></i> No Subscription
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 12px; text-align: center;">
+                                <span style="font-weight: 500; {% if key.requests_today >= key.daily_limit %}color: red;{% endif %}">
+                                    {{ key.requests_today }}
+                                </span>
+                            </td>
+                            <td style="padding: 12px; text-align: center;">{{ key.daily_limit }}</td>
+                            <td style="padding: 12px; text-align: center;">
+                                {% if key.is_active %}
+                                    <span style="background: #d4edda; color: #155724; padding: 5px 10px; border-radius: 20px; font-size: 0.85rem;">
+                                        <i class="fas fa-check-circle"></i> Active
+                                    </span>
+                                {% else %}
+                                    <span style="background: #f8d7da; color: #721c24; padding: 5px 10px; border-radius: 20px; font-size: 0.85rem;">
+                                        <i class="fas fa-times-circle"></i> Inactive
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 12px; text-align: center;">{{ key.created_at|date:"M d, Y" }}</td>
+                            <td style="padding: 12px; text-align: center;">
+                                <div style="display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
+                                    {% if key.tier == 'free' %}
+                                        <a href="{% url 'upgrade_api_key' key.id %}" 
+                                           style="background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; text-decoration: none; display: inline-block;">
+                                            <i class="fas fa-arrow-up"></i> Upgrade
+                                        </a>
+                                    {% elif key.subscription_status == 'active' %}
+                                        <form method="post" action="{% url 'cancel_subscription' key.id %}" 
+                                              onsubmit="return confirm('Are you sure you want to cancel this subscription? You will be downgraded to free tier.');" style="display: inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" style="background: #ffc107; color: #000; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+                                                <i class="fas fa-ban"></i> Cancel
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                    <form method="post" action="{% url 'delete_api_key' key.id %}" 
+                                          onsubmit="return confirm('Are you sure you want to delete this API key?');" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" style="background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+                </div>
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 40px; color: #6c757d;">
+                <i class="fas fa-key" style="font-size: 4rem; margin-bottom: 20px; opacity: 0.3;"></i>
+                <h3>No API Keys Yet</h3>
+                <p>Create your first API key to start using the classification API in your applications.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        alert('API key copied to clipboard!');
+    }, function(err) {
+        alert('Failed to copy: ' + err);
+    });
+}
+</script>
+{% endblock %}

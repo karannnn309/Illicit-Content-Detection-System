@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+
+{% block title %}All Submissions{% endblock %}
+
+{% block content %}
+<style>
+    .submissions-container {
+        max-width: 1400px;
+        margin: 50px auto;
+        padding: 0 30px;
+    }
+
+    .submissions-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .submissions-header h1 {
+        font-size: 36px;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .filter-bar {
+        background: white;
+        padding: 20px 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .filter-bar label {
+        font-weight: 600;
+        color: #666;
+    }
+
+    .filter-bar select {
+        padding: 10px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .submissions-table-container {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        overflow-x: auto;
+    }
+
+    .submissions-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 900px;
+    }
+
+    .submissions-table thead {
+        background: #f8f9fa;
+    }
+
+    .submissions-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        color: #666;
+        font-size: 14px;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .submissions-table td {
+        padding: 18px 15px;
+        border-bottom: 1px solid #eee;
+        vertical-align: middle;
+    }
+
+    .submissions-table tr:hover {
+        background: #f8f9fa;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .status-pending_review {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-approved {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-auto_approved {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .btn-review {
+        padding: 8px 20px;
+        background: #667eea;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        transition: background 0.3s;
+        white-space: nowrap;
+    }
+
+    .btn-review:hover {
+        background: #764ba2;
+    }
+
+    .btn-back {
+        display: inline-block;
+        margin-bottom: 20px;
+        padding: 10px 20px;
+        background: #95a5a6;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+
+    .categories-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        max-width: 200px;
+    }
+
+    .category-tag {
+        padding: 4px 10px;
+        background: #667eea;
+        color: white;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .content-preview {
+        max-width: 250px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 14px;
+        color: #666;
+    }
+
+    .no-submissions {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+    }
+</style>
+
+<div class="submissions-container">
+    <a href="{% url 'admin_dashboard' %}" class="btn-back">← Back to Dashboard</a>
+
+    <div class="submissions-header">
+        <h1>📋 All Content Submissions</h1>
+        <p>Review and manage all content submissions</p>
+    </div>
+
+    <div class="filter-bar">
+        <label for="status-filter">Filter by Status:</label>
+        <select id="status-filter" onchange="filterSubmissions(this.value)">
+            <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Submissions</option>
+            <option value="pending_review" {% if status_filter == 'pending_review' %}selected{% endif %}>Pending Review</option>
+            <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+            <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+            <option value="auto_approved" {% if status_filter == 'auto_approved' %}selected{% endif %}>Auto Approved</option>
+        </select>
+    </div>
+
+    <div class="submissions-table-container">
+        {% if submissions %}
+            <table class="submissions-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Type</th>
+                        <th>Content</th>
+                        <th>Categories</th>
+                        <th>Status</th>
+                        <th>Source</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for submission in submissions %}
+                        <tr>
+                            <td><strong>#{{ submission.id }}</strong></td>
+                            <td>{{ submission.user.username|default:"Anonymous" }}</td>
+                            <td>
+                                {% if submission.content_type == 'text' %}📝 Text
+                                {% elif submission.content_type == 'image' %}🖼️ Image
+                                {% elif submission.content_type == 'video' %}🎥 Video
+                                {% else %}📄 {{ submission.content_type }}{% endif %}
+                            </td>
+                            <td>
+                                <div class="content-preview">
+                                    {% if submission.text_content %}
+                                        {{ submission.text_content|truncatewords:8 }}
+                                    {% elif submission.content_url %}
+                                        {{ submission.content_url|truncatechars:40 }}
+                                    {% else %}
+                                        Uploaded file
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="categories-list">
+                                    {% for category in submission.detected_categories %}
+                                        <span class="category-tag">{{ category }}</span>
+                                    {% empty %}
+                                        <span style="color: #999; font-size: 12px;">Clean</span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-badge status-{{ submission.status }}">
+                                    {{ submission.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if submission.is_from_api %}
+                                    <span style="font-size: 12px; color: #666;">🔌 API</span>
+                                {% else %}
+                                    <span style="font-size: 12px; color: #666;">🌐 Web</span>
+                                {% endif %}
+                            </td>
+                            <td style="white-space: nowrap; font-size: 13px;">
+                                {{ submission.created_at|date:"M d, Y" }}<br>
+                                <span style="color: #999;">{{ submission.created_at|time:"H:i" }}</span>
+                            </td>
+                            <td>
+                                {% if submission.status == 'pending_review' %}
+                                    <a href="{% url 'review_content' submission.id %}" class="btn-review">Review</a>
+                                {% else %}
+                                    <a href="{% url 'review_content' submission.id %}" class="btn-review" style="background: #95a5a6;">View</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="no-submissions">
+                <h3>No submissions found</h3>
+                <p>No submissions match the selected filter.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function filterSubmissions(status) {
+        window.location.href = '?status=' + status;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,540 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ZiNUS - AI Content Analysis</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ---------- Your full CSS from original template ---------- */
+    :root {
+      --primary: #7c3aed;
+      --primary-light: #8b5cf6;
+      --primary-dark: #6d28d9;
+      --secondary: #06b6d4;
+      --accent: #f59e0b;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --dark: #1e293b;
+      --darker: #0f172a;
+      --light: #f8fafc;
+      --light-gray: #f1f5f9;
+      --medium-gray: #94a3b8;
+      --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      --card-shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.12);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background: white; color: var(--dark); min-height: 100vh; overflow-x: hidden; }
+
+    /* Background Animation */
+    .background-animation { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden; opacity: 0.03; }
+    .floating-shape { position: absolute; border-radius: 50%; background: var(--primary); animation: float 15s infinite ease-in-out; }
+    .shape-1 { width: 300px; height: 300px; top: 10%; left: 5%; animation-delay: 0s; }
+    .shape-2 { width: 200px; height: 200px; top: 60%; left: 80%; background: var(--secondary); animation-delay: 5s; }
+    .shape-3 { width: 150px; height: 150px; top: 20%; left: 70%; background: var(--accent); animation-delay: 10s; }
+    @keyframes float { 0%,100%{transform:translateY(0) rotate(0deg);} 50%{transform:translateY(-20px) rotate(5deg);} }
+
+    /* Navbar */
+    .navbar { background: white; box-shadow: 0 2px 20px rgba(0,0,0,0.08); padding:1.2rem 3rem; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
+    .brand { display:flex; align-items:center; gap:1rem; }
+    .logo { width:50px; height:50px; background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.8rem; box-shadow:0 8px 20px rgba(124,58,237,0.3); animation:pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
+    .brand-name { font-size:1.8rem; font-weight:700; background: linear-gradient(135deg,var(--primary),var(--secondary)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .nav-links { display:flex; gap:2.5rem; }
+    .nav-links a { text-decoration:none; color:var(--dark); font-weight:500; transition:var(--transition); position:relative; padding:0.5rem 0; }
+    .nav-links a:hover { color:var(--primary); }
+    .nav-links a::after { content:''; position:absolute; width:0; height:2px; bottom:0; left:0; background:var(--primary); transition:var(--transition); }
+    .nav-links a:hover::after { width:100%; }
+
+    /* Main Container */
+    .main-container { padding:3rem; max-width:1400px; margin:0 auto; }
+    .dashboard { display:grid; grid-template-columns:1fr 1.2fr; gap:2.5rem; align-items:start; }
+
+    /* Glass Panels */
+    .glass-panel { background:white; border:1px solid var(--light-gray); border-radius:20px; padding:2.5rem; box-shadow:var(--card-shadow); transition:var(--transition); animation:slideInUp 0.8s ease; }
+    .glass-panel:hover { transform:translateY(-5px); box-shadow:var(--card-shadow-hover); }
+    @keyframes slideInUp { from{opacity:0; transform:translateY(30px);} to{opacity:1; transform:translateY(0);} }
+    .panel-header { margin-bottom:2rem; text-align:center; }
+    .panel-header h2 { font-size:1.8rem; font-weight:700; color:var(--dark); margin-bottom:0.5rem; display:flex; align-items:center; justify-content:center; gap:1rem; }
+    .panel-header p { color:var(--medium-gray); font-size:1rem; }
+
+    /* Form Elements */
+    .input-group { margin-bottom:1.5rem; animation:fadeIn 0.6s ease; }
+    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+    .input-header { display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem; }
+    .input-icon { width:40px; height:40px; background:var(--light-gray); border-radius:10px; display:flex; align-items:center; justify-content:center; color:var(--primary); }
+    .input-group label { color:var(--dark); font-weight:600; font-size:1rem; }
+    .input-group input, .input-group textarea, .input-group select { width:100%; padding:1rem 1.25rem; background:white; border:2px solid var(--light-gray); border-radius:12px; color:var(--dark); font-size:1rem; transition:var(--transition); }
+    .input-group input::placeholder, .input-group textarea::placeholder { color:var(--medium-gray); }
+    .input-group input:focus, .input-group textarea:focus, .input-group select:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(124,58,237,0.1); }
+    .input-group small { color:var(--medium-gray); font-size:0.85rem; margin-top:0.5rem; display:block; }
+
+    /* Form Sections */
+    .form-section { margin-bottom:2rem; padding-bottom:1.5rem; border-bottom:1px solid var(--light-gray); }
+    .form-section:last-child { border-bottom:none; margin-bottom:0; }
+    .section-title { font-size:1.2rem; font-weight:600; color:var(--primary); margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem; }
+
+    /* Submit Button */
+    .submit-btn { background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; border:none; padding:1.25rem 2rem; border-radius:12px; font-weight:600; font-size:1.1rem; cursor:pointer; transition:var(--transition); display:flex; align-items:center; justify-content:center; gap:0.75rem; width:100%; margin-top:1rem; position:relative; overflow:hidden; }
+    .submit-btn::before { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition:0.5s; }
+    .submit-btn:hover::before { left:100%; }
+    .submit-btn:hover { transform:translateY(-3px); box-shadow:0 15px 30px rgba(124,58,237,0.3); }
+    .submit-btn:disabled { opacity:0.7; cursor:not-allowed; transform:none; }
+
+    /* Results Area */
+    .results-container { min-height:600px; }
+    .results-content { animation:fadeIn 0.8s ease; }
+    .result-placeholder { text-align:center; padding:4rem 2rem; color:var(--medium-gray); }
+    .placeholder-icon { font-size:4rem; margin-bottom:1.5rem; opacity:0.5; color:var(--primary); }
+
+    /* Tabs */
+    .tabs { display:flex; gap:1rem; margin-bottom:1.5rem; justify-content:center; flex-wrap:wrap; }
+    .result-tab { background:var(--light-gray); border:none; padding:0.75rem 1.5rem; border-radius:12px; cursor:pointer; transition:var(--transition); font-weight:600; }
+    .result-tab.active { background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; }
+
+    /* Chart Styling */
+    .chart-container { height:300px; margin:2rem 0; position:relative; }
+    canvas { max-width:100%; }
+
+    /* Keywords */
+    .keywords-container { display:flex; flex-wrap:wrap; gap:0.5rem; margin:1rem 0; }
+    .keyword { background:linear-gradient(135deg,var(--primary),var(--primary-light)); color:white; padding:0.4rem 0.8rem; border-radius:15px; font-size:0.85rem; font-weight:500; }
+
+    /* Stats Grid */
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:1rem; margin:1.5rem 0; }
+    .stat-card { background:var(--light-gray); padding:1.25rem; border-radius:10px; text-align:center; }
+    .stat-value { font-size:1.5rem; font-weight:700; color:var(--primary); }
+    .stat-label { font-size:0.8rem; color:var(--medium-gray); margin-top:0.25rem; }
+
+    /* Audio Waveform */
+    .audio-waveform { height:100px; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); border-radius:10px; margin:1.5rem 0; position:relative; overflow:hidden; display:flex; align-items:flex-end; justify-content:center; gap:2px; padding:0 10px; }
+    .wave-bar { width:4px; background:rgba(255,255,255,0.8); border-radius:2px 2px 0 0; transition:height 0.3s ease; }
+
+    /* Responsive */
+    @media(max-width:1024px){ .dashboard{grid-template-columns:1fr; } }
+    @media(max-width:768px){ .navbar{flex-direction:column; gap:1rem; } }
+
+    /* Loading Spinner */
+    .spinner { border:4px solid var(--light-gray); border-top:4px solid var(--primary); border-radius:50%; width:30px; height:30px; animation:spin 1s linear infinite; }
+    @keyframes spin { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+  </style>
+</head>
+<body>
+  <div class="background-animation">
+    <div class="floating-shape shape-1"></div>
+    <div class="floating-shape shape-2"></div>
+    <div class="floating-shape shape-3"></div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="brand">
+      <div class="logo">Z</div>
+      <div class="brand-name">ZiNUS</div>
+    </div>
+    <div class="nav-links">
+      <a href="#">Home</a>
+      <a href="#">Features</a>
+      <a href="#">Contact</a>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="main-container">
+    <div class="dashboard">
+      <!-- Form Panel -->
+      <div class="glass-panel">
+        <div class="panel-header">
+          <h2><i class="fas fa-file-alt"></i> Content Analysis</h2>
+          <p>Submit text, images, videos, or audio for AI analysis</p>
+        </div>
+
+        {% if error_message %}
+          <div style="background:#fef2f2; color:#dc2626; padding:1rem; border-radius:8px; margin-bottom:1.5rem; border-left:4px solid #dc2626;">
+            <i class="fas fa-exclamation-triangle"></i> {{ error_message }}
+          </div>
+        {% endif %}
+
+        <form id="content-form" method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <!-- Text Input Section -->
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fas fa-font"></i>
+              <span>Text Analysis</span>
+            </div>
+            <div class="input-group">
+              <div class="input-header">
+                <div class="input-icon"><i class="fas fa-edit"></i></div>
+                <label for="text_input">Enter Text</label>
+              </div>
+              {{ text_form.text }}
+            </div>
+            <div class="input-group">
+              <div class="input-header">
+                <div class="input-icon"><i class="fas fa-link"></i></div>
+                <label for="url_input">Or Enter URL</label>
+              </div>
+              {{ text_form.url }}
+            </div>
+          </div>
+
+          <!-- Image Input Section -->
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fas fa-image"></i>
+              <span>Image Analysis</span>
+            </div>
+            <div class="input-group">
+              <div class="input-header">
+                <div class="input-icon"><i class="fas fa-upload"></i></div>
+                <label for="image_input">Upload Image</label>
+              </div>
+              {{ image_form.image }}
+              <small>Supported: JPG, PNG, GIF, WebP</small>
+            </div>
+            <div class="input-group">
+              <div class="input-header">
+                <div class="input-icon"><i class="fas fa-camera"></i></div>
+                <label for="image_url">Or Enter Image URL</label>
+              </div>
+              {{ image_form.image_url }}
+            </div>
+          </div>
+
+          <!-- Video Input Section -->
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fas fa-video"></i>
+              <span>Video Analysis</span>
+            </div>
+            <div class="input-group">
+              <div class="input-header">
+                <div class="input-icon"><i class="fas fa-film"></i></div>
+                <label for="video_input">Upload Video</label>
+              </div>
+              <input type="file" name="video" id="video_input" accept="video/mp4,video/x-m4v,video/*" style="width:100%; padding:1rem 1.25rem; background:white; border:2px solid var(--light-gray); border-radius:12px; color:var(--dark);">
+              <small>Supported: MP4, AVI, MOV, WebM</small>
+            </div>
+          </div>
+
+          <!-- Audio Input Section -->
+          <div class="form-section">
+            <div class="section-title">
+              <i class="fas fa-microphone"></i>
+              <span>Audio Analysis</span>
+            </div>
+            <div class="input-group">
+              <div class="input-header">
+                <div class="input-icon"><i class="fas fa-music"></i></div>
+                <label for="audio_input">Upload Audio</label>
+              </div>
+              {{ audio_form.audio }}
+              <small>Supported: WAV, MP3, M4A, FLAC</small>
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn">
+            <span>Analyze Content</span>
+            <div class="spinner" style="display:none;"></div>
+          </button>
+        </form>
+      </div>
+
+      <!-- Results Panel -->
+      <div class="glass-panel results-container">
+        <div class="panel-header">
+          <h2><i class="fas fa-chart-bar"></i> Analysis Results</h2>
+          <p>Real-time insights from AI analysis</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+          {% if text_result and input_text %}<button class="result-tab active" data-tab="text">Text Analysis</button>{% endif %}
+          {% if image_result %}<button class="result-tab" data-tab="image">Image Analysis</button>{% endif %}
+          {% if video_result %}<button class="result-tab" data-tab="video">Video Analysis</button>{% endif %}
+          {% if audio_result %}<button class="result-tab" data-tab="audio">Audio Analysis</button>{% endif %}
+        </div>
+
+        <!-- Text Results -->
+        <div id="text-results" class="results-content" style="{% if text_result and input_text %}{% else %}display:none{% endif %}">
+          {% if text_result and input_text %}
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-value">{{ detected_lang|upper }}</div>
+                <div class="stat-label">Language</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">{{ root_words|length }}</div>
+                <div class="stat-label">Keywords</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">{{ text_categories|length }}</div>
+                <div class="stat-label">Categories</div>
+              </div>
+            </div>
+
+            <div class="chart-container">
+              <canvas id="textChart"></canvas>
+            </div>
+
+            <h4 style="color:var(--dark); margin:1.5rem 0 0.5rem;">Extracted Keywords</h4>
+            <div class="keywords-container">
+              {% for word in root_words %}
+                <span class="keyword">{{ word }}</span>
+              {% empty %}
+                <span class="keyword">No keywords found</span>
+              {% endfor %}
+            </div>
+
+            <h4 style="color:var(--dark); margin:1.5rem 0 0.5rem;">Content Categories</h4>
+            <div class="keywords-container">
+              {% for category in text_categories %}
+                <span class="keyword">{{ category }}</span>
+              {% empty %}
+                <span class="keyword">No categories identified</span>
+              {% endfor %}
+            </div>
+
+            <div style="background:var(--light-gray); padding:1.25rem; border-radius:10px; margin-top:1.5rem; border-left:4px solid var(--accent);">
+              <h4 style="color:var(--dark); margin-bottom:0.5rem;"><i class="fas fa-lightbulb"></i> Conclusion</h4>
+              <p style="color:var(--dark);">{{ text_conclusion }}</p>
+            </div>
+          {% else %}
+            <div class="result-placeholder"><i class="fas fa-font placeholder-icon"></i>No Text Data Available</div>
+          {% endif %}
+        </div>
+
+        <!-- Image Results -->
+        <div id="image-results" class="results-content" style="display:none;">
+          {% if image_result %}
+            <div class="chart-container">
+              <canvas id="imageChart"></canvas>
+            </div>
+
+            <h4 style="color:var(--dark); margin:1.5rem 0 0.5rem;">Detected Categories</h4>
+            <div class="keywords-container">
+              {% for cat in image_categories %}
+                <span class="keyword">{{ cat }}</span>
+              {% empty %}
+                <span class="keyword">No categories detected</span>
+              {% endfor %}
+            </div>
+
+            {% if image_detections %}
+              <h4 style="color:var(--dark); margin:1.5rem 0 0.5rem;">Object Detections</h4>
+              <div style="display:grid; gap:0.5rem;">
+                {% for det in image_detections %}
+                  <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem; background:white; border-radius:8px; border:1px solid var(--light-gray);">
+                    <span style="color:var(--dark); font-weight:500;">{{ det.class }}</span>
+                    <span style="color:var(--accent); font-weight:600;">{{ det.score|floatformat:2 }}</span>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <div style="background:var(--light-gray); padding:1.25rem; border-radius:10px; margin-top:1.5rem; border-left:4px solid var(--accent);">
+              <h4 style="color:var(--dark); margin-bottom:0.5rem;"><i class="fas fa-lightbulb"></i> Conclusion</h4>
+              <p style="color:var(--dark);">{{ image_conclusion }}</p>
+            </div>
+          {% else %}
+            <div class="result-placeholder"><i class="fas fa-image placeholder-icon"></i>No Image Data Available</div>
+          {% endif %}
+        </div>
+
+        <!-- Video Results -->
+        <div id="video-results" class="results-content" style="display:none;">
+          {% if video_result %}
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-value">{{ video_result.frame_count }}</div>
+                <div class="stat-label">Total Frames</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">{{ video_result.analysed_frames }}</div>
+                <div class="stat-label">Analyzed</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">{{ video_categories|length }}</div>
+                <div class="stat-label">Categories</div>
+              </div>
+            </div>
+
+            <div class="chart-container">
+              <canvas id="videoChart"></canvas>
+            </div>
+
+            <h4 style="color:var(--dark); margin:1.5rem 0 0.5rem;">Top Categories</h4>
+            <div class="keywords-container">
+              {% for cat in video_categories %}
+                <span class="keyword">{{ cat }}</span>
+              {% empty %}
+                <span class="keyword">No categories detected</span>
+              {% endfor %}
+            </div>
+
+            <div style="background:var(--light-gray); padding:1.25rem; border-radius:10px; margin-top:1.5rem; border-left:4px solid var(--accent);">
+              <h4 style="color:var(--dark); margin-bottom:0.5rem;"><i class="fas fa-lightbulb"></i> Conclusion</h4>
+              <p style="color:var(--dark);">{{ video_conclusion }}</p>
+            </div>
+          {% else %}
+            <div class="result-placeholder"><i class="fas fa-video placeholder-icon"></i>No Video Data Available</div>
+          {% endif %}
+        </div>
+
+        <!-- Audio Results -->
+        <div id="audio-results" class="results-content" style="display:none;">
+          {% if audio_result %}
+            <div class="audio-waveform" id="audioWaveform"></div>
+
+            <div class="chart-container">
+              <canvas id="audioChart"></canvas>
+            </div>
+
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-value">{{ audio_categories|length }}</div>
+                <div class="stat-label">Categories</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value">
+                  {% if audio_result %}
+                    {{ audio_result|length }}
+                  {% else %}
+                    0
+                  {% endif %}
+                </div>
+                <div class="stat-label">Detections</div>
+              </div>
+            </div>
+
+            <h4 style="color:var(--dark); margin:1.5rem 0 0.5rem;">Detected Categories</h4>
+            <div class="keywords-container">
+              {% for cat in audio_categories %}
+                <span class="keyword">{{ cat }}</span>
+              {% empty %}
+                <span class="keyword">No categories detected</span>
+              {% endfor %}
+            </div>
+
+            <div style="background:var(--light-gray); padding:1.25rem; border-radius:10px; margin-top:1.5rem; border-left:4px solid var(--accent);">
+              <h4 style="color:var(--dark); margin-bottom:0.5rem;"><i class="fas fa-lightbulb"></i> Conclusion</h4>
+              <p style="color:var(--dark);">{{ audio_conclusion }}</p>
+            </div>
+          {% else %}
+            <div class="result-placeholder"><i class="fas fa-microphone placeholder-icon"></i>No Audio Data Available</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Form submit loading spinner
+    const form = document.getElementById('content-form');
+    form.addEventListener('submit', function(e){
+      const btn = form.querySelector('.submit-btn');
+      const spinner = btn.querySelector('.spinner');
+      btn.querySelector('span').style.display = 'none';
+      spinner.style.display = 'inline-block';
+    });
+
+    // Tab Switching
+    const tabs = document.querySelectorAll('.result-tab');
+    tabs.forEach(tab=>{
+      tab.addEventListener('click',()=>{
+        document.querySelectorAll('.result-tab').forEach(t=>t.classList.remove('active'));
+        tab.classList.add('active');
+        const target = tab.dataset.tab;
+        document.querySelectorAll('.results-content').forEach(c=>c.style.display='none');
+        document.getElementById(target+'-results').style.display='block';
+      });
+    });
+
+    // Audio waveform animation
+    function createAudioWaveform() {
+      const audioContainer = document.getElementById('audioWaveform');
+      if(audioContainer){
+        audioContainer.innerHTML = '';
+        for(let i=0;i<50;i++){
+          const bar = document.createElement('div');
+          bar.className = 'wave-bar';
+          bar.style.height = (20 + Math.random() * 80) + 'px';
+          audioContainer.appendChild(bar);
+        }
+        
+        // Animate the waveform
+        setInterval(() => {
+          audioContainer.querySelectorAll('.wave-bar').forEach(bar => {
+            bar.style.height = (20 + Math.random() * 80) + 'px';
+          });
+        }, 300);
+      }
+    }
+
+    // Initialize charts
+    function initChart(canvasId, dataObj, color='rgba(124,58,237,0.7)'){
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      new Chart(ctx, {
+        type:'bar',
+        data:{
+          labels:Object.keys(dataObj),
+          datasets:[{
+            label:'Confidence %',
+            data:Object.values(dataObj),
+            backgroundColor:color,
+            borderColor:color.replace('0.7','1'),
+            borderWidth:1,
+            borderRadius:6
+          }]
+        },
+        options:{ 
+          responsive:true, 
+          maintainAspectRatio:false,
+          scales:{
+            y:{
+              beginAtZero:true,
+              max:100,
+              ticks:{
+                callback:function(value){
+                  return value + '%';
+                }
+              }
+            }
+          },
+          plugins:{
+            legend:{ display:false }
+          }
+        }
+      });
+    }
+
+    // Initialize all charts when data is available
+    document.addEventListener('DOMContentLoaded', function() {
+      const textData = {% if text_result %}{{ text_result|safe }}{% else %}{}{% endif %};
+      const imageData = {% if image_result %}{{ image_result|safe }}{% else %}{}{% endif %};
+      const videoData = {% if video_result %}{{ video_result.category_counts|safe }}{% else %}{}{% endif %};
+      const audioData = {% if audio_result %}{{ audio_result|safe }}{% else %}{}{% endif %};
+
+      if(Object.keys(textData).length>0) initChart('textChart', textData, 'rgba(124,58,237,0.7)');
+      if(Object.keys(imageData).length>0) initChart('imageChart', imageData, 'rgba(6,182,212,0.7)');
+      if(Object.keys(videoData).length>0) initChart('videoChart', videoData, 'rgba(245,158,11,0.7)');
+      if(Object.keys(audioData).length>0) {
+        initChart('audioChart', audioData, 'rgba(16,185,129,0.7)');
+        createAudioWaveform();
+      }
+
+      // Activate first available tab if none active
+      if(!document.querySelector('.result-tab.active') && tabs.length>0){
+        tabs[0].classList.add('active');
+        document.getElementById(tabs[0].dataset.tab+'-results').style.display='block';
+      }
+    });
+  </script>
+</body>
+</html>
